@@ -11,8 +11,9 @@ def generate_report(results, file_path='detailed_report.csv'):
     for result in results:
         y_true = result['y_true']
         y_pred = result['y_pred']
+        n_estimators = result.get('n_estimators', 'N/A')
         learning_rate = result.get('learning_rate', 'N/A')
-        max_iter = result.get('max_iter', 'N/A')
+        max_depth = result.get('max_depth', 'N/A')
 
         accuracy = accuracy_score(y_true, y_pred)
         precision = precision_score(y_true, y_pred, average='weighted')
@@ -20,8 +21,9 @@ def generate_report(results, file_path='detailed_report.csv'):
         f1 = f1_score(y_true, y_pred, average='weighted')
 
         report_data.append({
+            'n_estimators': n_estimators,
             'learning_rate': learning_rate,
-            'max_iter': max_iter,
+            'max_depth': max_depth,
             'Accuracy': accuracy,
             'Precision': precision,
             'Recall': recall,

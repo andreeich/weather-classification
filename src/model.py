@@ -1,10 +1,10 @@
 from sklearn.metrics import accuracy_score, classification_report
 from sklearn.preprocessing import StandardScaler
+from sklearn.ensemble import GradientBoostingClassifier
 import pandas as pd
 import yaml
 import logging
 from utils import load_csv
-from custom_logistic_regression import CustomLogisticRegression
 from report import generate_report
 
 logging.basicConfig(level=logging.INFO)
@@ -31,8 +31,8 @@ def main():
     logging.info("Training data class distribution:")
     logging.info(y_train.value_counts())
 
-    # Train the custom logistic regression model
-    model = CustomLogisticRegression(learning_rate=0.01, max_iter=1000)
+    # Train the gradient boosting classifier
+    model = GradientBoostingClassifier(n_estimators=100, learning_rate=0.1, max_depth=3, random_state=42)
     model.fit(X_train, y_train)
 
     # Evaluate the model
@@ -46,8 +46,9 @@ def main():
 
     # Prepare results for the report
     results = [{
-        'learning_rate': 0.01,
-        'max_iter': 1000,
+        'n_estimators': 100,
+        'learning_rate': 0.1,
+        'max_depth': 3,
         'accuracy': accuracy,
         'y_true': y_test,
         'y_pred': y_pred

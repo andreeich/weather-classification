@@ -36,6 +36,8 @@ weather-classification
    pip install -r requirements.txt
    ```
 
+   **Note**: This project requires Python 3.9 - 3.12.
+
 3. **Prepare the data**:
    Run the `data_preparation.py` script to load the cleaned dataset and split it into training, validation, and test sets:
 

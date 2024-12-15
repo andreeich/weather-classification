@@ -1,10 +1,10 @@
-from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, classification_report
 from sklearn.preprocessing import StandardScaler
 import pandas as pd
 import yaml
 import logging
 from utils import load_csv
+from custom_logistic_regression import CustomLogisticRegression
 from report import generate_report
 
 logging.basicConfig(level=logging.INFO)
@@ -16,19 +16,6 @@ def preprocess_data(data):
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(X)
     return X_scaled, y
-
-def train_model(X_train, y_train, max_iter, C, solver):
-    """Train the logistic regression model with specified parameters."""
-    model = LogisticRegression(max_iter=max_iter, C=C, solver=solver)
-    model.fit(X_train, y_train)
-    return model
-
-def evaluate_model(model, X_test, y_test):
-    """Evaluate the model and return accuracy and classification report."""
-    predictions = model.predict(X_test)
-    accuracy = accuracy_score(y_test, predictions)
-    report = classification_report(y_test, predictions)
-    return accuracy, report
 
 def main():
     with open('config.yaml', 'r') as file:
@@ -44,21 +31,27 @@ def main():
     logging.info("Training data class distribution:")
     logging.info(y_train.value_counts())
 
-    parameters = config['model']['parameters']
-    results = []
+    # Train the custom logistic regression model
+    model = CustomLogisticRegression(learning_rate=0.01, max_iter=1000)
+    model.fit(X_train, y_train)
 
-    for params in parameters:
-        model = train_model(X_train, y_train, **params)
-        accuracy, report = evaluate_model(model, X_test, y_test)
-        results.append({
-            'max_iter': params['max_iter'],
-            'C': params['C'],
-            'solver': params['solver'],
-            'accuracy': accuracy,
-            'y_true': y_test,
-            'y_pred': model.predict(X_test),
-            'params': params
-        })
+    # Evaluate the model
+    y_pred = model.predict(X_test)
+    accuracy = accuracy_score(y_test, y_pred)
+    report = classification_report(y_test, y_pred)
+
+    logging.info(f"Accuracy: {accuracy}")
+    logging.info("Classification Report:")
+    logging.info(report)
+
+    # Prepare results for the report
+    results = [{
+        'learning_rate': 0.01,
+        'max_iter': 1000,
+        'accuracy': accuracy,
+        'y_true': y_test,
+        'y_pred': y_pred
+    }]
 
     # Generate a detailed report
     generate_report(results, config['report']['file_path'])

@@ -6,12 +6,9 @@ data:
 
 model:
   parameters:
-    - max_iter: 1000
-      C: 1.0
-      solver: "lbfgs"
-    - max_iter: 1000
-      C: 0.5
-      solver: "liblinear"
+    - n_estimators: 100
+      learning_rate: 0.1
+      max_depth: 3
 
 report:
   file_path: "detailed_report.csv"

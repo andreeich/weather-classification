@@ -1,11 +1,13 @@
 from sklearn.metrics import accuracy_score, classification_report
 from sklearn.preprocessing import StandardScaler
-from sklearn.ensemble import GradientBoostingClassifier
 import pandas as pd
 import yaml
 import logging
 from utils import load_csv
 from report import generate_report
+import tensorflow as tf
+from keras.models import Sequential
+from keras.layers import Dense
 
 logging.basicConfig(level=logging.INFO)
 
@@ -16,6 +18,16 @@ def preprocess_data(data):
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(X)
     return X_scaled, y
+
+def build_model(input_dim):
+    """Build a neural network model."""
+    model = Sequential([
+        Dense(64, activation='relu', input_dim=input_dim),
+        Dense(32, activation='relu'),
+        Dense(1, activation='sigmoid')
+    ])
+    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+    return model
 
 def main():
     with open('config.yaml', 'r') as file:
@@ -31,12 +43,13 @@ def main():
     logging.info("Training data class distribution:")
     logging.info(y_train.value_counts())
 
-    # Train the gradient boosting classifier
-    model = GradientBoostingClassifier(n_estimators=100, learning_rate=0.1, max_depth=3, random_state=42)
-    model.fit(X_train, y_train)
+    # Build and train the neural network model
+    model = build_model(X_train.shape[1])
+    model.fit(X_train, y_train, epochs=config['model']['parameters'][0]['epochs'], batch_size=config['model']['parameters'][0]['batch_size'], validation_split=0.2)
 
     # Evaluate the model
-    y_pred = model.predict(X_test)
+    y_pred_prob = model.predict(X_test)
+    y_pred = (y_pred_prob > 0.5).astype(int).flatten()
     accuracy = accuracy_score(y_test, y_pred)
     report = classification_report(y_test, y_pred)
 
@@ -46,9 +59,7 @@ def main():
 
     # Prepare results for the report
     results = [{
-        'n_estimators': 100,
-        'learning_rate': 0.1,
-        'max_depth': 3,
+        'model': 'Neural Network',
         'accuracy': accuracy,
         'y_true': y_test,
         'y_pred': y_pred

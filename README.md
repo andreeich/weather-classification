@@ -23,6 +23,7 @@ weather-classification
 ## Setup Instructions
 
 1. **Clone the repository**:
+
    ```
    git clone <repository-url>
    cd weather-classification
@@ -30,31 +31,28 @@ weather-classification
 
 2. **Install dependencies**:
    It is recommended to use a virtual environment. You can create one using `venv` or `conda`. After activating your environment, run:
+
    ```
    pip install -r requirements.txt
    ```
 
 3. **Prepare the data**:
    Run the `data_preparation.py` script to load the cleaned dataset and split it into training, validation, and test sets:
+
    ```
    python src/data_preparation.py
    ```
 
-4. **Train the model**:
-   Use the `model.py` script to train the classification model:
+4. **Train the model and generate the report**:
+   Use the `model.py` script to train the classification model and automatically generate a report of the model's performance:
+
    ```
    python src/model.py
    ```
 
-5. **Generate the report**:
-   After training, run the `report.py` script to generate a report of the model's performance:
-   ```
-   python src/report.py
-   ```
-
 ## Results Interpretation
 
-The generated report will include various metrics such as accuracy, precision, recall, and F1-score, which will help in evaluating the model's performance. 
+The generated report will include various metrics such as accuracy, precision, recall, and F1-score, which will help in evaluating the model's performance.
 
 ## License
 

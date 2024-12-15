@@ -1,47 +1,67 @@
 from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, classification_report
+from sklearn.preprocessing import StandardScaler
 import pandas as pd
+import yaml
+import logging
+from utils import load_csv
+from report import generate_report
 
-def load_data(file_path):
-    data = pd.read_csv(file_path)
-    return data
+logging.basicConfig(level=logging.INFO)
 
 def preprocess_data(data):
-    # Assuming 'rain' is the target variable and the rest are features
-    X = data.drop(columns=['rain'])
-    y = data['rain']
-    return X, y
+    """Preprocess the data by scaling features and binarizing the target variable."""
+    X = data.drop(columns=['rain', 'date'])  # Exclude 'date' column
+    y = (data['rain'] > 0).astype(int)  # Binarize the 'rain' column
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)
+    return X_scaled, y
 
-def train_model(X_train, y_train):
-    model = LogisticRegression(max_iter=1000)
+def train_model(X_train, y_train, max_iter, C, solver):
+    """Train the logistic regression model with specified parameters."""
+    model = LogisticRegression(max_iter=max_iter, C=C, solver=solver)
     model.fit(X_train, y_train)
     return model
 
 def evaluate_model(model, X_test, y_test):
+    """Evaluate the model and return accuracy and classification report."""
     predictions = model.predict(X_test)
     accuracy = accuracy_score(y_test, predictions)
     report = classification_report(y_test, predictions)
     return accuracy, report
 
 def main():
-    # Load and preprocess data
-    data = load_data('data/cleaned_weather.csv')
-    X, y = preprocess_data(data)
+    with open('config.yaml', 'r') as file:
+        config = yaml.safe_load(file)
 
-    # Split the data into training, validation, and test sets
-    X_train, X_temp, y_train, y_temp = train_test_split(X, y, test_size=0.3, random_state=42)
-    X_val, X_test, y_val, y_test = train_test_split(X_temp, y_temp, test_size=0.333, random_state=42)  # 0.333 * 0.3 = 0.1
+    train_data = load_csv(config['data']['train_data'])
+    test_data = load_csv(config['data']['test_data'])
 
-    # Train the model
-    model = train_model(X_train, y_train)
+    X_train, y_train = preprocess_data(train_data)
+    X_test, y_test = preprocess_data(test_data)
 
-    # Evaluate the model
-    accuracy, report = evaluate_model(model, X_test, y_test)
+    # Check the distribution of the target variable
+    logging.info("Training data class distribution:")
+    logging.info(y_train.value_counts())
 
-    print(f'Accuracy: {accuracy}')
-    print('Classification Report:')
-    print(report)
+    parameters = config['model']['parameters']
+    results = []
+
+    for params in parameters:
+        model = train_model(X_train, y_train, **params)
+        accuracy, report = evaluate_model(model, X_test, y_test)
+        results.append({
+            'max_iter': params['max_iter'],
+            'C': params['C'],
+            'solver': params['solver'],
+            'accuracy': accuracy,
+            'y_true': y_test,
+            'y_pred': model.predict(X_test),
+            'params': params
+        })
+
+    # Generate a detailed report
+    generate_report(results, config['report']['file_path'])
 
 if __name__ == "__main__":
     main()

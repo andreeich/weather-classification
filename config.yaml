@@ -1,0 +1,17 @@
+data:
+  cleaned_data: "data/cleaned_weather.csv"
+  train_data: "data/train.csv"
+  validation_data: "data/validation.csv"
+  test_data: "data/test.csv"
+
+model:
+  parameters:
+    - max_iter: 1000
+      C: 1.0
+      solver: "lbfgs"
+    - max_iter: 1000
+      C: 0.5
+      solver: "liblinear"
+
+report:
+  file_path: "detailed_report.csv"

@@ -1,15 +1,33 @@
 import pandas as pd
-from sklearn.metrics import accuracy_score, classification_report
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+import logging
 
-def generate_report(y_true, y_pred, model_name):
-    accuracy = accuracy_score(y_true, y_pred)
-    report = classification_report(y_true, y_pred)
+logging.basicConfig(level=logging.INFO)
 
-    report_df = pd.DataFrame({
-        'Model': [model_name],
-        'Accuracy': [accuracy],
-        'Report': [report]
-    })
+def generate_report(results, file_path='detailed_report.csv'):
+    """Generate a detailed report of model performance metrics."""
+    report_data = []
 
-    report_df.to_csv('model_report.csv', index=False)
-    print("Report generated and saved as model_report.csv")
+    for result in results:
+        y_true = result['y_true']
+        y_pred = result['y_pred']
+        params = result['params']
+
+        accuracy = accuracy_score(y_true, y_pred)
+        precision = precision_score(y_true, y_pred, average='weighted')
+        recall = recall_score(y_true, y_pred, average='weighted')
+        f1 = f1_score(y_true, y_pred, average='weighted')
+
+        report_data.append({
+            'max_iter': params['max_iter'],
+            'C': params['C'],
+            'solver': params['solver'],
+            'Accuracy': accuracy,
+            'Precision': precision,
+            'Recall': recall,
+            'F1-Score': f1
+        })
+
+    report_df = pd.DataFrame(report_data)
+    report_df.to_csv(file_path, index=False)
+    logging.info(f"Detailed report generated and saved as {file_path}")

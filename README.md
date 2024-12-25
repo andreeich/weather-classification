@@ -1,6 +1,6 @@
 # Weather Classification Project
 
-This project aims to classify weather conditions using a dataset of weather observations. The dataset includes various atmospheric and environmental parameters, and the project implements a linear classification or logistic regression model to predict weather conditions.
+The aim of the work is to investigate and compare the effectiveness of machine learning methods for the classification of weather conditions, specifically rainfall prediction based on meteorological data. The project implements a custom logistic regression model, the scikit-learn library for gradient boosting, and the TensorFlow/Keras framework for building a neural network.
 
 ## Project Structure
 
@@ -13,7 +13,9 @@ weather-classification
 │   └── validation.csv           # Validation dataset (20% of the original dataset)
 ├── src
 │   ├── data_preparation.py      # Functions for loading and splitting the dataset
-│   ├── model.py                 # Implementation of the classification model
+│   ├── logistic_regression.py   # Implementation of the logistic regression model
+│   ├── gradient_boosting.py     # Implementation of the gradient boosting model
+│   ├── neural_network.py        # Implementation of the neural network model
 │   ├── report.py                # Generates a report of model performance metrics
 │   └── utils.py                 # Utility functions for data processing
 ├── requirements.txt             # List of dependencies for the project
@@ -45,16 +47,18 @@ weather-classification
    python src/data_preparation.py
    ```
 
-4. **Train the model and generate the report**:
-   Use the `model.py` script to train the classification model and automatically generate a report of the model's performance:
+4. **Train the models and generate the report**:
+   Use the respective scripts to train the classification models and automatically generate a report of the model's performance:
 
    ```
-   python src/model.py
+   python src/logistic_regression.py
+   python src/gradient_boosting.py
+   python src/neural_network.py
    ```
 
 ## Results Interpretation
 
-The generated report will include various metrics such as accuracy, precision, recall, and F1-score, which will help in evaluating the model's performance.
+The generated report will include various metrics such as accuracy, precision, recall, and F1-score, which will help in evaluating the model's performance. The logistic regression model achieved the best results with an accuracy of 98.01%.
 
 ## License
 

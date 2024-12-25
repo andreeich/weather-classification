@@ -1,13 +1,10 @@
-from sklearn.metrics import accuracy_score, classification_report
+from sklearn.metrics import accuracy_score, classification_report, precision_score, recall_score, f1_score
 from sklearn.preprocessing import StandardScaler
 import pandas as pd
 import yaml
 import logging
 from utils import load_csv
-from report import generate_report
-import tensorflow as tf
-from keras.models import Sequential
-from keras.layers import Dense
+from custom_logistic_regression import CustomLogisticRegression
 
 logging.basicConfig(level=logging.INFO)
 
@@ -19,15 +16,33 @@ def preprocess_data(data):
     X_scaled = scaler.fit_transform(X)
     return X_scaled, y
 
-def build_model(input_dim):
-    """Build a neural network model."""
-    model = Sequential([
-        Dense(64, activation='relu', input_dim=input_dim),
-        Dense(32, activation='relu'),
-        Dense(1, activation='sigmoid')
-    ])
-    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
-    return model
+def generate_report(results, file_path='detailed_report.csv'):
+    """Generate a detailed report of model performance metrics."""
+    report_data = []
+
+    for result in results:
+        y_true = result['y_true']
+        y_pred = result['y_pred']
+        learning_rate = result.get('learning_rate', 'N/A')
+        max_iter = result.get('max_iter', 'N/A')
+
+        accuracy = accuracy_score(y_true, y_pred)
+        precision = precision_score(y_true, y_pred, average='weighted')
+        recall = recall_score(y_true, y_pred, average='weighted')
+        f1 = f1_score(y_true, y_pred, average='weighted')
+
+        report_data.append({
+            'learning_rate': learning_rate,
+            'max_iter': max_iter,
+            'Accuracy': accuracy,
+            'Precision': precision,
+            'Recall': recall,
+            'F1-Score': f1
+        })
+
+    report_df = pd.DataFrame(report_data)
+    report_df.to_csv(file_path, index=False)
+    logging.info(f"Detailed report generated and saved as {file_path}")
 
 def main():
     with open('config.yaml', 'r') as file:
@@ -43,13 +58,12 @@ def main():
     logging.info("Training data class distribution:")
     logging.info(y_train.value_counts())
 
-    # Build and train the neural network model
-    model = build_model(X_train.shape[1])
-    model.fit(X_train, y_train, epochs=config['model']['parameters'][0]['epochs'], batch_size=config['model']['parameters'][0]['batch_size'], validation_split=0.2)
+    # Train the custom logistic regression model
+    model = CustomLogisticRegression(learning_rate=0.01, max_iter=1000)
+    model.fit(X_train, y_train)
 
     # Evaluate the model
-    y_pred_prob = model.predict(X_test)
-    y_pred = (y_pred_prob > 0.5).astype(int).flatten()
+    y_pred = model.predict(X_test)
     accuracy = accuracy_score(y_test, y_pred)
     report = classification_report(y_test, y_pred)
 
@@ -59,7 +73,8 @@ def main():
 
     # Prepare results for the report
     results = [{
-        'model': 'Neural Network',
+        'learning_rate': 0.01,
+        'max_iter': 1000,
         'accuracy': accuracy,
         'y_true': y_test,
         'y_pred': y_pred

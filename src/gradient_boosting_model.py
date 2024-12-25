@@ -60,28 +60,30 @@ def main():
     logging.info("Training data class distribution:")
     logging.info(y_train.value_counts())
 
-    # Train the gradient boosting classifier
-    model = GradientBoostingClassifier(n_estimators=100, learning_rate=0.1, max_depth=3, random_state=42)
-    model.fit(X_train, y_train)
+    results = []
 
-    # Evaluate the model
-    y_pred = model.predict(X_test)
-    accuracy = accuracy_score(y_test, y_pred)
-    report = classification_report(y_test, y_pred)
+    # Iterate over parameter combinations
+    for params in config['model']['parameters']:
+        if 'n_estimators' in params and 'learning_rate' in params and 'max_depth' in params:
+            model = GradientBoostingClassifier(n_estimators=params['n_estimators'], learning_rate=params['learning_rate'], max_depth=params['max_depth'], random_state=42)
+            model.fit(X_train, y_train)
 
-    logging.info(f"Accuracy: {accuracy}")
-    logging.info("Classification Report:")
-    logging.info(report)
+            y_pred = model.predict(X_test)
+            accuracy = accuracy_score(y_test, y_pred)
+            report = classification_report(y_test, y_pred)
 
-    # Prepare results for the report
-    results = [{
-        'n_estimators': 100,
-        'learning_rate': 0.1,
-        'max_depth': 3,
-        'accuracy': accuracy,
-        'y_true': y_test,
-        'y_pred': y_pred
-    }]
+            logging.info(f"Accuracy: {accuracy}")
+            logging.info("Classification Report:")
+            logging.info(report)
+
+            results.append({
+                'n_estimators': params['n_estimators'],
+                'learning_rate': params['learning_rate'],
+                'max_depth': params['max_depth'],
+                'accuracy': accuracy,
+                'y_true': y_test,
+                'y_pred': y_pred
+            })
 
     # Generate a detailed report
     generate_report(results, config['report']['file_path'])

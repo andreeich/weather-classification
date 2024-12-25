@@ -35,7 +35,8 @@ def generate_report(results, file_path='detailed_report.csv'):
     for result in results:
         y_true = result['y_true']
         y_pred = result['y_pred']
-        model = result.get('model', 'N/A')
+        epochs = result.get('epochs', 'N/A')
+        batch_size = result.get('batch_size', 'N/A')
 
         accuracy = accuracy_score(y_true, y_pred)
         precision = precision_score(y_true, y_pred, average='weighted')
@@ -43,7 +44,8 @@ def generate_report(results, file_path='detailed_report.csv'):
         f1 = f1_score(y_true, y_pred, average='weighted')
 
         report_data.append({
-            'Model': model,
+            'epochs': epochs,
+            'batch_size': batch_size,
             'Accuracy': accuracy,
             'Precision': precision,
             'Recall': recall,
@@ -68,27 +70,30 @@ def main():
     logging.info("Training data class distribution:")
     logging.info(y_train.value_counts())
 
-    # Build and train the neural network model
-    model = build_model(X_train.shape[1])
-    model.fit(X_train, y_train, epochs=config['model']['parameters'][0]['epochs'], batch_size=config['model']['parameters'][0]['batch_size'], validation_split=0.2)
+    results = []
 
-    # Evaluate the model
-    y_pred_prob = model.predict(X_test)
-    y_pred = (y_pred_prob > 0.5).astype(int).flatten()
-    accuracy = accuracy_score(y_test, y_pred)
-    report = classification_report(y_test, y_pred)
+    # Iterate over parameter combinations
+    for params in config['model']['parameters']:
+        if 'epochs' in params and 'batch_size' in params:
+            model = build_model(X_train.shape[1])
+            model.fit(X_train, y_train, epochs=params['epochs'], batch_size=params['batch_size'], validation_split=0.2)
 
-    logging.info(f"Accuracy: {accuracy}")
-    logging.info("Classification Report:")
-    logging.info(report)
+            y_pred_prob = model.predict(X_test)
+            y_pred = (y_pred_prob > 0.5).astype(int).flatten()
+            accuracy = accuracy_score(y_test, y_pred)
+            report = classification_report(y_test, y_pred)
 
-    # Prepare results for the report
-    results = [{
-        'model': 'Neural Network',
-        'accuracy': accuracy,
-        'y_true': y_test,
-        'y_pred': y_pred
-    }]
+            logging.info(f"Accuracy: {accuracy}")
+            logging.info("Classification Report:")
+            logging.info(report)
+
+            results.append({
+                'epochs': params['epochs'],
+                'batch_size': params['batch_size'],
+                'accuracy': accuracy,
+                'y_true': y_test,
+                'y_pred': y_pred
+            })
 
     # Generate a detailed report
     generate_report(results, config['report']['file_path'])

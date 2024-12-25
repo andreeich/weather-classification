@@ -58,27 +58,29 @@ def main():
     logging.info("Training data class distribution:")
     logging.info(y_train.value_counts())
 
-    # Train the custom logistic regression model
-    model = CustomLogisticRegression(learning_rate=0.01, max_iter=1000)
-    model.fit(X_train, y_train)
+    results = []
 
-    # Evaluate the model
-    y_pred = model.predict(X_test)
-    accuracy = accuracy_score(y_test, y_pred)
-    report = classification_report(y_test, y_pred)
+    # Iterate over parameter combinations
+    for params in config['model']['parameters']:
+        if 'learning_rate' in params and 'max_iter' in params:
+            model = CustomLogisticRegression(learning_rate=params['learning_rate'], max_iter=params['max_iter'])
+            model.fit(X_train, y_train)
 
-    logging.info(f"Accuracy: {accuracy}")
-    logging.info("Classification Report:")
-    logging.info(report)
+            y_pred = model.predict(X_test)
+            accuracy = accuracy_score(y_test, y_pred)
+            report = classification_report(y_test, y_pred)
 
-    # Prepare results for the report
-    results = [{
-        'learning_rate': 0.01,
-        'max_iter': 1000,
-        'accuracy': accuracy,
-        'y_true': y_test,
-        'y_pred': y_pred
-    }]
+            logging.info(f"Accuracy: {accuracy}")
+            logging.info("Classification Report:")
+            logging.info(report)
+
+            results.append({
+                'learning_rate': params['learning_rate'],
+                'max_iter': params['max_iter'],
+                'accuracy': accuracy,
+                'y_true': y_test,
+                'y_pred': y_pred
+            })
 
     # Generate a detailed report
     generate_report(results, config['report']['file_path'])
